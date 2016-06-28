@@ -1,0 +1,1 @@
+INSERT INTO `sda-spring-2`.user (id, email, first_name, last_name, password) VALUES (1, 'wojtek@niepodam.pl', 'Wojciech', 'Musiał', '1234');
