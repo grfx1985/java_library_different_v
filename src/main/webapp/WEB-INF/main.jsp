@@ -7,3 +7,5 @@
     <h1>Welcome to our Library</h1>
 
 </div>
+
+<%@ include file="/WEB-INF/include/footer.jsp" %>
