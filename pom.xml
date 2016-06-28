@@ -18,6 +18,7 @@
         <java.servlet.version>3.1.0</java.servlet.version>
         <jstl.version>1.2</jstl.version>
         <slf4j.version>1.7.7</slf4j.version>
+        <mysql.connector.version>5.1.38</mysql.connector.version>
     </properties>
 
     <dependencies>
@@ -95,7 +96,7 @@
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
-            <version>5.1.38</version>
+            <version>${mysql.connector.version}</version>
         </dependency>
     </dependencies>
 
