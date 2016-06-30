@@ -1,11 +1,12 @@
 package com.wmusial.dao;
 
-import com.wmusial.model.User;
+import com.wmusial.model.Book;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-@Repository
-public interface UserRepository extends JpaRepository<User, Long> {
+import java.util.List;
 
+@Repository
+public interface BookRepository extends JpaRepository<Book, Long>{
 
 }

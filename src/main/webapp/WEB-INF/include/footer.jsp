@@ -4,7 +4,6 @@
 </div>
 
 <footer>
-    <p>created by </p>
 </footer>
 
 </body>
