@@ -6,21 +6,21 @@
 
 <div class="container">
 
-    <c:if test="${logout}">
-        <div class="alert alert-success fade in">
+    <c:if test="${param.logout != null}">
+        <div class="alert alert-success">
             <a class="close" data-dismiss="alert" href="#">&times;</a>
             <p>You've logged out</p>
         </div>
     </c:if>
 
     <c:if test="${register}">
-        <div class="alert alert-info fade in">
+        <div class="alert alert-info">
             <a class="close" data-dismiss="alert" href="#">&times;</a>
             <p>Register successful. You can log in</p>
         </div>
     </c:if>
 
-    <c:if test="${error}">
+    <c:if test="${param.error != null}">
         <div class="alert alert-danger fade in">
             <a class="close" data-dismiss="alert" href="#">&times;</a>
             <p>Username or password is incorrect</p>

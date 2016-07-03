@@ -1,7 +1,10 @@
 package com.wmusial.model;
 
+import com.wmusial.dto.BookDto;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import java.util.List;
@@ -16,7 +19,10 @@ public class Book extends BaseEntity {
     @Column(name = "title")
     private String title;
 
-    @OneToMany(mappedBy = "book")
+    @Column(name = "quantity")
+    private Integer quantity;
+
+    @OneToMany(mappedBy = "book", fetch = FetchType.LAZY)
     private List<Rent> rents;
 
     public Book() {
@@ -25,6 +31,13 @@ public class Book extends BaseEntity {
     public Book(String author, String title) {
         this.author = author;
         this.title = title;
+    }
+
+    public Book(BookDto book) {
+        this.id = book.getId();
+        this.author = book.getAuthor();
+        this.title = book.getTitle();
+        this.quantity = book.getQuantity();
     }
 
     public String getAuthor() {
@@ -49,5 +62,13 @@ public class Book extends BaseEntity {
 
     public void setRents(List<Rent> rents) {
         this.rents = rents;
+    }
+
+    public Integer getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
     }
 }

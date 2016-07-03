@@ -2,7 +2,7 @@
 <%@ include file="/WEB-INF/include/header.jsp" %>
 <%@ include file="/WEB-INF/include/navbar.jsp" %>
 
-<c:url var="createUserUrl" value="/user/create"/>
+<c:url var="createUserUrl" value="/admin/user/create"/>
 
 <div class="container">
 

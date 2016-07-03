@@ -2,7 +2,7 @@
 <%@ include file="/WEB-INF/include/header.jsp" %>
 <%@ include file="/WEB-INF/include/navbar.jsp" %>
 
-<c:url var="updateUserUrl" value="/user/update"/>
+<c:url var="updateUserUrl" value="/admin/user/update"/>
 
 <div class="container">
 

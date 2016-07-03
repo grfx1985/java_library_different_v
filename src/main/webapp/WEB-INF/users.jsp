@@ -2,8 +2,8 @@
 <%@ include file="/WEB-INF/include/header.jsp" %>
 <%@ include file="/WEB-INF/include/navbar.jsp" %>
 
-<c:url value="/user/update" var="userUpdateUrl"/>
-<c:url value="/user/delete" var="deleteUrl"/>
+<c:url value="/admin/user/update" var="userUpdateUrl"/>
+<c:url value="/admin/user/delete" var="deleteUrl"/>
 
 <div class="container">
 

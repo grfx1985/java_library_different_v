@@ -2,6 +2,8 @@
 <%@ include file="/WEB-INF/include/header.jsp" %>
 <%@ include file="/WEB-INF/include/navbar.jsp" %>
 
+<c:url value="/rent/book" var="rentBookUrl"/>
+
 <div class="container">
 
     <h1>List of books</h1>
@@ -22,11 +24,18 @@
 
                 <c:forEach items="${books}" var="book">
                 <tr>
-                    <td></td>
+                    <td>${book.id}</td>
                     <td>${book.author}</td>
                     <td>${book.title}</td>
-                    <td>6</td>
-                    <td class="text-center"><a class="btn btn-sm btn-primary">Rent</a></td>
+                    <td>${book.quantity}</td>
+                    <td class="text-center">
+                        <form method="post" action="${rentBookUrl}">
+                            <input type="hidden" name="bookId" value="${book.id}">
+                            <button
+                                    <c:if test="${book.quantity <= 0}">disabled</c:if>
+                                    type="submit" class="btn btn-sm btn-primary">Rent</button>
+                        </form>
+                    </td>
                 </tr>
                 </c:forEach>
 

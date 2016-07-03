@@ -15,6 +15,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 @Controller
+@RequestMapping("/admin")
 public class UserController {
 
     @Autowired
@@ -46,7 +47,7 @@ public class UserController {
 
         userRepository.save(user);
 
-        return "redirect:/users";
+        return "redirect:/admin/users";
     }
 
     @RequestMapping(value = "/user/update/{id}", method = RequestMethod.GET)
@@ -63,7 +64,7 @@ public class UserController {
 
         userRepository.save(user);
 
-        return "redirect:/users";
+        return "redirect:/admin/users";
     }
 
     @RequestMapping(value = "/user/delete", method = RequestMethod.POST)
@@ -71,7 +72,7 @@ public class UserController {
 
         userRepository.delete(id);
 
-        return "redirect:/users";
+        return "redirect:/admin/users";
     }
     
 }

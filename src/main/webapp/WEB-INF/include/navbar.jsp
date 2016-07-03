@@ -1,10 +1,12 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
 
 <c:url var="booksUrl" value="/books"/>
-<c:url var="createBookUrl" value="/book/create"/>
+<c:url var="createBookUrl" value="/admin/book/create"/>
 
-<c:url var="usersUrl" value="/users"/>
-<c:url var="createUserUrl" value="/user/create"/>
+<c:url var="usersUrl" value="/admin/users"/>
+<c:url var="rentsUrl" value="/rents"/>
+<c:url var="createUserUrl" value="/admin/user/create"/>
 
 <c:url var="logoutUrl" value="/logout"/>
 
@@ -22,6 +24,8 @@
 
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
             <ul class="nav navbar-nav">
+
+                <sec:authorize access="hasRole('ADMIN')">
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Users <span class="caret"></span></a>
                     <ul class="dropdown-menu">
@@ -30,6 +34,8 @@
                         <li><a href="${usersUrl}">Show all</a></li>
                     </ul>
                 </li>
+                </sec:authorize>
+
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Books <span class="caret"></span></a>
                     <ul class="dropdown-menu">
@@ -38,12 +44,15 @@
                         <li><a href="${booksUrl}">Show all</a></li>
                     </ul>
                 </li>
-                <li><a href="#">My rents</a></li>
+                <li><a href="${rentsUrl}">Rents</a></li>
             </ul>
 
             <ul class="nav navbar-nav navbar-right">
                 <li class="dropdown">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Wojciech <span class="caret"></span></a>
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                        <sec:authentication property="principal.username" />
+                        <span class="caret"></span>
+                    </a>
                     <ul class="dropdown-menu">
                         <li><a href="#">My account</a></li>
                         <li role="separator" class="divider"></li>
