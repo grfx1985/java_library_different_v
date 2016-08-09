@@ -10,10 +10,10 @@
     <packaging>war</packaging>
 
     <properties>
-        <spring.version>4.3.0.RELEASE</spring.version>
+        <spring.version>4.3.1.RELEASE</spring.version>
         <spring.security.version>4.1.0.RELEASE</spring.security.version>
         <spring.data.version>1.10.2.RELEASE</spring.data.version>
-        <hibernate.version>5.1.0.Final</hibernate.version>
+        <hibernate.version>5.2.1.Final</hibernate.version>
         <hibernate.validator.version>5.2.4.Final</hibernate.validator.version>
         <java.servlet.version>3.1.0</java.servlet.version>
         <jstl.version>1.2</jstl.version>

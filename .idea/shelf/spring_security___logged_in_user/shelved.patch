@@ -1,0 +1,269 @@
+Index: src/main/java/com/wmusial/config/AppConfig.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/wmusial/config/AppConfig.java	(date 1467390396000)
++++ src/main/java/com/wmusial/config/AppConfig.java	(revision )
+@@ -1,11 +1,14 @@
+ package com.wmusial.config;
+ 
++import com.wmusial.interceptor.HomeInterceptor;
++import org.springframework.beans.factory.annotation.Autowired;
+ import org.springframework.context.annotation.Bean;
+ import org.springframework.context.annotation.ComponentScan;
+ import org.springframework.context.annotation.Configuration;
+ import org.springframework.web.servlet.ViewResolver;
+ import org.springframework.web.servlet.config.annotation.DefaultServletHandlerConfigurer;
+ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
++import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
+ import org.springframework.web.servlet.view.InternalResourceViewResolver;
+ 
+@@ -14,6 +17,9 @@
+ @EnableWebMvc
+ public class AppConfig extends WebMvcConfigurerAdapter {
+ 
++    @Autowired
++    HomeInterceptor homeInterceptor;
++
+     @Bean
+     public ViewResolver viewResolver() {
+         InternalResourceViewResolver viewResolver = new InternalResourceViewResolver();
+@@ -25,5 +31,11 @@
+     @Override
+     public void configureDefaultServletHandling(DefaultServletHandlerConfigurer configurer) {
+         configurer.enable();
++    }
++
++    @Override
++    public void addInterceptors(InterceptorRegistry registry) {
++        registry.addInterceptor(homeInterceptor).addPathPatterns("/**");
++
+     }
+ }
+Index: src/main/webapp/WEB-INF/login.jsp
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/webapp/WEB-INF/login.jsp	(date 1467390396000)
++++ src/main/webapp/WEB-INF/login.jsp	(revision )
+@@ -1,4 +1,5 @@
+ <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
++
+ <%@ include file="/WEB-INF/include/header.jsp" %>
+ 
+ <c:url value="/login" var="loginUrl"/>
+@@ -6,23 +7,27 @@
+ 
+ <div class="container">
+ 
+-    <c:if test="${logout}">
+-        <div class="alert alert-success fade in">
+-            <a class="close" data-dismiss="alert" href="#">&times;</a>
++    <c:out value="Logout : ${param.logout}"/>
++    <c:out value="Error : ${param.errorParam}"/>
++    <c:out value="Register : ${param.register}"/>
++
++    <c:if test="${param.logout  != null}">
++        <div class="alert alert-success">
++            <%--<a class="close" data-dismiss="alert" href="#">&times;</a>--%>
+             <p>You've logged out</p>
+         </div>
+     </c:if>
+ 
+-    <c:if test="${register}">
+-        <div class="alert alert-info fade in">
+-            <a class="close" data-dismiss="alert" href="#">&times;</a>
++    <c:if test="${param.register != null}">
++        <div class="alert alert-info">
++            <%--<a class="close" data-dismiss="alert" href="#">&times;</a>--%>
+             <p>Register successful. You can log in</p>
+         </div>
+     </c:if>
+ 
+-    <c:if test="${error}">
+-        <div class="alert alert-danger fade in">
+-            <a class="close" data-dismiss="alert" href="#">&times;</a>
++    <c:if test="${param.errorParam  != null}">
++        <div class="alert alert-danger">
++            <%--<a class="close" data-dismiss="alert" href="#">&times;</a>--%>
+             <p>Username or password is incorrect</p>
+         </div>
+     </c:if>
+\ No newline at end of file
+Index: pom.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- pom.xml	(date 1467390396000)
++++ pom.xml	(revision )
+@@ -50,6 +50,13 @@
+             <version>${spring.security.version}</version>
+         </dependency>
+ 
++        <dependency>
++            <groupId>org.springframework.security</groupId>
++            <artifactId>spring-security-taglibs</artifactId>
++            <version>${spring.security.version}</version>
++            <scope>runtime</scope>
++        </dependency>
++
+         <!--Hibernate-->
+         <dependency>
+             <groupId>org.hibernate</groupId>
+\ No newline at end of file
+Index: src/main/java/com/wmusial/controller/MainController.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/wmusial/controller/MainController.java	(date 1467390396000)
++++ src/main/java/com/wmusial/controller/MainController.java	(revision )
+@@ -8,6 +8,7 @@
+ import org.springframework.web.bind.annotation.ModelAttribute;
+ import org.springframework.web.bind.annotation.RequestMapping;
+ import org.springframework.web.bind.annotation.RequestMethod;
++import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+ 
+ @Controller
+ public class MainController {
+@@ -31,16 +32,18 @@
+     }
+ 
+     @RequestMapping(value = "/register", method = RequestMethod.POST)
+-    public String register(@ModelAttribute User user) {
++    public String register(@ModelAttribute User user, RedirectAttributes redirectAttributes) {
+ 
+         String rawPassword = user.getPassword();
+ 
+         BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
+         user.setPassword(bCryptPasswordEncoder.encode(rawPassword));
+ 
++        redirectAttributes.addFlashAttribute("register", true);
++
+         userRepository.save(user);
+ 
+-        return "login";
++        return "redirect:/login";
+     }
+ 
+ }
+Index: src/main/webapp/WEB-INF/include/navbar.jsp
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/webapp/WEB-INF/include/navbar.jsp	(date 1467390396000)
++++ src/main/webapp/WEB-INF/include/navbar.jsp	(revision )
+@@ -1,4 +1,5 @@
+ <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
++<%@ taglib prefix="sec" uri="http://www.springframework.org/security/tags" %>
+ 
+ <c:url var="booksUrl" value="/books"/>
+ <c:url var="createBookUrl" value="/book/create"/>
+@@ -43,7 +44,10 @@
+ 
+             <ul class="nav navbar-nav navbar-right">
+                 <li class="dropdown">
+-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Wojciech <span class="caret"></span></a>
++                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
++                        ${user.firstName}
++                        <span class="caret"></span>
++                    </a>
+                     <ul class="dropdown-menu">
+                         <li><a href="#">My account</a></li>
+                         <li role="separator" class="divider"></li>
+\ No newline at end of file
+Index: src/main/java/com/wmusial/service/impl/UserServiceImpl.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/wmusial/service/impl/UserServiceImpl.java	(date 1467390396000)
++++ src/main/java/com/wmusial/service/impl/UserServiceImpl.java	(revision )
+@@ -4,8 +4,10 @@
+ import com.wmusial.model.User;
+ import com.wmusial.service.UserService;
+ import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.security.core.Authentication;
+ import org.springframework.security.core.GrantedAuthority;
+ import org.springframework.security.core.authority.SimpleGrantedAuthority;
++import org.springframework.security.core.context.SecurityContextHolder;
+ import org.springframework.security.core.userdetails.UserDetails;
+ import org.springframework.security.core.userdetails.UsernameNotFoundException;
+ import org.springframework.stereotype.Service;
+@@ -33,5 +35,25 @@
+                 user.getPassword(),
+                 authorities
+         );
++    }
++
++    @Override
++    public User getLoggedUser() {
++        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
++
++        if (authentication == null || !authentication.isAuthenticated()) {
++            return null;
++        }
++
++        System.out.println(authentication);
++
++        org.springframework.security.core.userdetails.User user = (org.springframework.security.core.userdetails.User) authentication.getPrincipal();
++//        authentication.getDetails();
++
++//        GenericUserDetails details = (GenericUserDetails) authentication.getDetails();
++
++        String email = user.getUsername();
++        return userRepository.findByEmail(email);
++
+     }
+ }
+Index: src/main/java/com/wmusial/interceptor/HomeInterceptor.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/wmusial/interceptor/HomeInterceptor.java	(revision )
++++ src/main/java/com/wmusial/interceptor/HomeInterceptor.java	(revision )
+@@ -0,0 +1,22 @@
++package com.wmusial.interceptor;
++
++import com.wmusial.service.UserService;
++import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.stereotype.Component;
++import org.springframework.web.servlet.ModelAndView;
++import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
++
++import javax.servlet.http.HttpServletRequest;
++import javax.servlet.http.HttpServletResponse;
++
++@Component
++public class HomeInterceptor extends HandlerInterceptorAdapter {
++
++    @Autowired
++    UserService userService;
++
++    @Override
++    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
++        modelAndView.addObject("user", userService.getLoggedUser());
++    }
++}
+Index: src/main/java/com/wmusial/service/UserService.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/wmusial/service/UserService.java	(date 1467390396000)
++++ src/main/java/com/wmusial/service/UserService.java	(revision )
+@@ -1,6 +1,8 @@
+ package com.wmusial.service;
+ 
++import com.wmusial.model.User;
+ import org.springframework.security.core.userdetails.UserDetailsService;
+ 
+ public interface UserService extends UserDetailsService {
++    User getLoggedUser();
+ }

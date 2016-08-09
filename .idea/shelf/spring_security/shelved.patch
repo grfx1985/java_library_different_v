@@ -1,0 +1,275 @@
+Index: src/main/webapp/WEB-INF/login.jsp
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/webapp/WEB-INF/login.jsp	(date 1467281369000)
++++ src/main/webapp/WEB-INF/login.jsp	(revision )
+@@ -18,9 +18,9 @@
+ 
+     <div class="card card-container">
+         <h4> Login to your account</h4>
+-        <form class="form-signin">
+-            <input type="email" id="inputEmail" class="form-control" placeholder="Email address" required autofocus>
+-            <input type="password" id="inputPassword" class="form-control" placeholder="Password" required>
++        <form action="<c:url value="/login"/>" method="post" class="form-signin">
++            <input type="email" name="email" id="inputEmail" class="form-control" placeholder="Email address" required autofocus>
++            <input type="password" name="password" id="inputPassword" class="form-control" placeholder="Password" required>
+             <div id="remember" class="checkbox">
+                 <label>
+                     <input type="checkbox" value="remember-me"> Remember me
+\ No newline at end of file
+Index: src/main/java/com/wmusial/controller/MainController.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/wmusial/controller/MainController.java	(date 1467281369000)
++++ src/main/java/com/wmusial/controller/MainController.java	(revision )
+@@ -12,4 +12,7 @@
+         return "main";
+     }
+ 
++    @RequestMapping(value = "/login", method = RequestMethod.GET)
++    public String getLoginPage() { return "login"; }
++
+ }
+Index: src/main/java/com/wmusial/config/SecurityConfig.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/wmusial/config/SecurityConfig.java	(revision )
++++ src/main/java/com/wmusial/config/SecurityConfig.java	(revision )
+@@ -0,0 +1,52 @@
++package com.wmusial.config;
++
++import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.context.annotation.Configuration;
++import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
++import org.springframework.security.config.annotation.web.builders.HttpSecurity;
++import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
++import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
++import org.springframework.security.core.userdetails.UserDetailsService;
++
++@Configuration
++@EnableWebSecurity
++public class SecurityConfig extends WebSecurityConfigurerAdapter {
++
++    @Autowired
++    private UserDetailsService userDetailsService;
++
++    @Override
++    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
++        auth.userDetailsService(userDetailsService);
++    }
++
++    @Override
++    protected void configure(HttpSecurity http) throws Exception {
++        http
++                .csrf().disable()
++                .authorizeRequests()
++                    .antMatchers("/resources/**").permitAll()
++                    .antMatchers("/login").permitAll()
++                    .antMatchers("/register").permitAll()
++                    .antMatchers("/**").authenticated()
++                    .antMatchers("/admin/**").hasRole("ADMIN")
++                .and()
++                .formLogin()
++                    .permitAll()
++                    .loginPage("/login")
++                    .loginProcessingUrl("/login")
++//                    .successForwardUrl("/")
++                    .failureForwardUrl("/login?error")
++                    .usernameParameter("email")
++                    .passwordParameter("password")
++                .and()
++                .logout()
++                    .permitAll()
++                    .logoutUrl("/logout")
++                    .logoutSuccessUrl("/login?logout")
++                    .invalidateHttpSession(true)
++                .and()
++                .rememberMe();
++    }
++
++}
+Index: src/main/java/com/wmusial/config/ApplicationInitializer.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/wmusial/config/ApplicationInitializer.java	(date 1467281369000)
++++ src/main/java/com/wmusial/config/ApplicationInitializer.java	(revision )
+@@ -2,8 +2,10 @@
+ 
+ import org.springframework.web.WebApplicationInitializer;
+ import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
++import org.springframework.web.filter.DelegatingFilterProxy;
+ import org.springframework.web.servlet.DispatcherServlet;
+ 
++import javax.servlet.FilterRegistration;
+ import javax.servlet.ServletContext;
+ import javax.servlet.ServletException;
+ import javax.servlet.ServletRegistration;
+@@ -20,6 +22,15 @@
+         ServletRegistration.Dynamic dispatcher = servletContext.addServlet("dispatcher", dispatcherServlet);
+         dispatcher.setLoadOnStartup(1);
+         dispatcher.addMapping("/");
++
++//        Register Spring security filter
++
++        servletContext.addFilter("springSecurityFilterChain", DelegatingFilterProxy.class)
++                .addMappingForUrlPatterns(null, false, "/*");
++
++//        FilterRegistration.Dynamic springSecurityFilterChainRegistration =
++//                servletContext.addFilter("springSecurityFilterChain", DelegatingFilterProxy.class);
++//        springSecurityFilterChainRegistration.addMappingForUrlPatterns(null, false, "/*");
+ 
+     }
+ }
+Index: src/main/webapp/WEB-INF/include/navbar.jsp
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/webapp/WEB-INF/include/navbar.jsp	(date 1467281369000)
++++ src/main/webapp/WEB-INF/include/navbar.jsp	(revision )
+@@ -46,7 +46,7 @@
+                         <li><a href="#">My account</a></li>
+                         <li role="separator" class="divider"></li>
+                         <li>
+-                            <a href="#">Logout</a>
++                            <a href="<c:url value="/logout"/>">Logout</a>
+ 
+                         </li>
+                     </ul>
+\ No newline at end of file
+Index: src/main/java/com/wmusial/model/User.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/wmusial/model/User.java	(date 1467281369000)
++++ src/main/java/com/wmusial/model/User.java	(revision )
+@@ -2,6 +2,8 @@
+ 
+ import javax.persistence.Column;
+ import javax.persistence.Entity;
++import javax.persistence.EnumType;
++import javax.persistence.Enumerated;
+ import javax.persistence.OneToMany;
+ import javax.persistence.Table;
+ import java.util.List;
+@@ -10,6 +12,8 @@
+ @Table(name = "user")
+ public class User extends BaseEntity {
+ 
++    public enum Role { USER, ADMIN }
++
+     @Column(name = "first_name")
+     private String firstName;
+ 
+@@ -22,10 +26,14 @@
+     @Column(name = "password")
+     private String password;
+ 
++    @Enumerated(EnumType.STRING)
++    private Role role;
++
+     @OneToMany(mappedBy = "user")
+     private List<Rent> rents;
+ 
+     public User() {
++        role = Role.USER;
+     }
+ 
+     public String getFirstName() {
+@@ -66,5 +74,13 @@
+ 
+     public void setRents(List<Rent> rents) {
+         this.rents = rents;
++    }
++
++    public Role getRole() {
++        return role;
++    }
++
++    public void setRole(Role role) {
++        this.role = role;
+     }
+ }
+Index: src/main/java/com/wmusial/dao/UserRepository.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/wmusial/dao/UserRepository.java	(date 1467281369000)
++++ src/main/java/com/wmusial/dao/UserRepository.java	(revision )
+@@ -6,6 +6,5 @@
+ 
+ @Repository
+ public interface UserRepository extends JpaRepository<User, Long> {
+-
+-
++    User findByEmail(String email);
+ }
+Index: src/main/java/com/wmusial/service/impl/UserServiceImpl.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/wmusial/service/impl/UserServiceImpl.java	(date 1467281369000)
++++ src/main/java/com/wmusial/service/impl/UserServiceImpl.java	(revision )
+@@ -1,8 +1,36 @@
+ package com.wmusial.service.impl;
+ 
++import com.wmusial.dao.UserRepository;
++import com.wmusial.model.User;
+ import com.wmusial.service.UserService;
++import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.security.core.GrantedAuthority;
++import org.springframework.security.core.authority.SimpleGrantedAuthority;
++import org.springframework.security.core.userdetails.UserDetails;
++import org.springframework.security.core.userdetails.UsernameNotFoundException;
++import org.springframework.stereotype.Service;
+ 
++import java.util.ArrayList;
++import java.util.List;
++
++@Service
+ public class UserServiceImpl implements UserService {
+ 
++    @Autowired
++    private UserRepository userRepository;
+ 
++    @Override
++    public UserDetails loadUserByUsername(String s) throws UsernameNotFoundException {
++        User user = userRepository.findByEmail(s);
++
++        List<GrantedAuthority> authorities = new ArrayList<>();
++
++        authorities.add(new SimpleGrantedAuthority("ROLE_" + user.getRole()));
++
++        return new org.springframework.security.core.userdetails.User(
++                user.getEmail(),
++                user.getPassword(),
++                authorities
++        );
++    }
+ }
+Index: src/main/java/com/wmusial/service/UserService.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/wmusial/service/UserService.java	(date 1467281369000)
++++ src/main/java/com/wmusial/service/UserService.java	(revision )
+@@ -1,4 +1,6 @@
+ package com.wmusial.service;
+ 
+-public interface UserService {
++import org.springframework.security.core.userdetails.UserDetailsService;
++
++public interface UserService extends UserDetailsService {
+ }

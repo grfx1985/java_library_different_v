@@ -1,0 +1,193 @@
+Index: src/main/java/com/wmusial/config/AppConfig.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/wmusial/config/AppConfig.java	(date 1467545616000)
++++ src/main/java/com/wmusial/config/AppConfig.java	(revision )
+@@ -3,6 +3,7 @@
+ import org.springframework.context.annotation.Bean;
+ import org.springframework.context.annotation.ComponentScan;
+ import org.springframework.context.annotation.Configuration;
++import org.springframework.transaction.annotation.EnableTransactionManagement;
+ import org.springframework.web.servlet.ViewResolver;
+ import org.springframework.web.servlet.config.annotation.DefaultServletHandlerConfigurer;
+ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+@@ -12,6 +13,7 @@
+ @Configuration
+ @ComponentScan(basePackages = "com.wmusial")
+ @EnableWebMvc
++@EnableTransactionManagement
+ public class AppConfig extends WebMvcConfigurerAdapter {
+ 
+     @Bean
+Index: src/main/webapp/WEB-INF/login.jsp
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/webapp/WEB-INF/login.jsp	(date 1467545616000)
++++ src/main/webapp/WEB-INF/login.jsp	(revision )
+@@ -13,7 +13,7 @@
+         </div>
+     </c:if>
+ 
+-    <c:if test="${register}">
++    <c:if test="${param.register != null}">
+         <div class="alert alert-info">
+             <a class="close" data-dismiss="alert" href="#">&times;</a>
+             <p>Register successful. You can log in</p>
+\ No newline at end of file
+Index: src/main/java/com/wmusial/controller/RentController.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/wmusial/controller/RentController.java	(date 1467545616000)
++++ src/main/java/com/wmusial/controller/RentController.java	(revision )
+@@ -17,6 +17,8 @@
+ import org.springframework.web.bind.annotation.RequestMethod;
+ import org.springframework.web.bind.annotation.RequestParam;
+ 
++import java.security.Principal;
++
+ @Controller
+ public class RentController {
+ 
+@@ -31,10 +33,12 @@
+ 
+ 
+     @RequestMapping(value = "/rents", method = RequestMethod.GET)
+-    public String getRentsView(Model model) {
++    public String getRentsView(Model model, Principal principal) {
+ 
+-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+-        String email = authentication.getName();
++
++
++//        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
++        String email = principal.getName();
+ 
+         User user = userRepository.findByEmail(email);
+ 
+Index: src/main/java/com/wmusial/controller/MainController.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/wmusial/controller/MainController.java	(date 1467545616000)
++++ src/main/java/com/wmusial/controller/MainController.java	(revision )
+@@ -40,7 +40,7 @@
+ 
+         userRepository.save(user);
+ 
+-        return "login";
++        return "redirect:/login?register";
+     }
+ 
+ }
+Index: src/main/java/com/wmusial/controller/BookController.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/wmusial/controller/BookController.java	(date 1467545616000)
++++ src/main/java/com/wmusial/controller/BookController.java	(revision )
+@@ -1,5 +1,6 @@
+ package com.wmusial.controller;
+ 
++import com.wmusial.dao.BookDao;
+ import com.wmusial.dao.BookRepository;
+ import com.wmusial.dto.BookDto;
+ import com.wmusial.model.Book;
+@@ -19,13 +20,16 @@
+ @Controller
+ public class BookController {
+ 
++//    @Autowired
++//    private BookRepository bookRepository;
++
+     @Autowired
+-    private BookRepository bookRepository;
++    private BookDao bookDao;
+ 
+     @RequestMapping(value = "/books", method = RequestMethod.GET)
+     public String getBooksView(Model model) {
+ 
+-        List<Book> books = bookRepository.findAll();
++        List<Book> books = bookDao.findAll();
+ 
+         model.addAttribute("books", books);
+ 
+@@ -48,7 +52,7 @@
+             return "book-create";
+         }
+ 
+-        bookRepository.save(new Book(book));
++        bookDao.save(new Book(book));
+ 
+         return "redirect:/books";
+     }
+Index: src/main/java/com/wmusial/dao/BookDaoImpl.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/wmusial/dao/BookDaoImpl.java	(revision )
++++ src/main/java/com/wmusial/dao/BookDaoImpl.java	(revision )
+@@ -0,0 +1,33 @@
++package com.wmusial.dao;
++
++import com.wmusial.model.Book;
++import org.springframework.stereotype.Repository;
++import org.springframework.transaction.annotation.Transactional;
++
++import javax.persistence.EntityManager;
++import javax.persistence.PersistenceContext;
++import java.util.List;
++
++@Repository
++public class BookDaoImpl implements BookDao {
++
++    @PersistenceContext
++    private EntityManager entityManager;
++
++
++    @Override
++    public Book findById(Long id) {
++        return entityManager.find(Book.class, id);
++    }
++
++    @Override
++    public List<Book> findAll() {
++        return entityManager.createQuery("select b from Book b", Book.class).getResultList();
++    }
++
++    @Override
++    @Transactional
++    public void save(Book book) {
++        entityManager.persist(book);
++    }
++}
+Index: src/main/java/com/wmusial/dao/BookDao.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/main/java/com/wmusial/dao/BookDao.java	(revision )
++++ src/main/java/com/wmusial/dao/BookDao.java	(revision )
+@@ -0,0 +1,14 @@
++package com.wmusial.dao;
++
++import com.wmusial.model.Book;
++
++import java.util.List;
++
++public interface BookDao {
++
++    Book findById(Long id);
++
++    List<Book> findAll();
++
++    void save(Book book);
++}

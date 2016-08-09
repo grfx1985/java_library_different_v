@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="dataSourceStorageLocal">
+    <data-source name="MySQL - sda-spring-2@localhost" uuid="52b42832-75a5-4bfb-afc1-285a5d5c837b">
+      <secret-storage>master_key</secret-storage>
+      <user-name>root</user-name>
+      <introspection-scope>sda-spring-2:*</introspection-scope>
+      <resolve-scope>sda-spring-2:*</resolve-scope>
+    </data-source>
+  </component>
+</project>
